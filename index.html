@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>GIF Generator</title>
+    <style>
+      body {
+        background-color: darkblue;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>GIF Generator</h1>
+
+      <!-- Rendered Buttons will get Dumped Here  -->
+      <div id="buttons-view"></div>
+      <br />
+
+      <form id="GIF-form">
+        <label for="GIF-input">Add a category:</label>
+        <input type="text" id="GIF-input" />
+        <br />
+
+      <!-- Button triggers new GIF to be added -->
+      <input id="add-GIF" type="submit" value="Add" />
+      </form>
+      <br />
+      <!-- GIF categories will get added here -->
+      <div id="GIF-view"></div>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script type="text/javascript">
+        // Initial array of categories
+        var GIFs = ["Happy Birthday", "Avengers Endgame", "Music","Chicken","Dog","Cat"];
+
+        //Amount of gifs to add
+        var limit = 5;
+        //GIF max rating
+        var ratingMax = "G";
+
+        // function to rerender for GIF
+        function displayGifInfo() {
+          var gifs = $(this).attr("data-name");
+          var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=S18rPOcnvxPkaXt77OfY4xZOFY7lHnmh&q="+gifs+"&limit="+limit+"&offset=0&rating="+ratingMax+"&lang=en";
+
+          // AJAX call for button clicked
+          $.ajax({
+            url: queryURL,
+            method: "GET"
+          }).then(function(response) {
+            //function to makeDiv making images
+            function makeDiv(response) {
+              return `
+              <div>
+                <img src="${response.images.fixed_height_still.url}" 
+                data-still="${response.images.fixed_height_still.url}" 
+                data-animate="${response.images.fixed_height.url}"
+                data-state="still"
+                class="gif"
+                />
+                <p>Rating: ${response.rating}</p>
+            </div>
+              `;
+            }
+            $("#GIF-view").prepend(response.data.map(makeDiv));
+          });
+        }
+
+        //on image click, animate, still
+        $(document).on("click", ".gif", function(event) {
+          event.preventDefault();
+          var state = $(this).attr("data-state");
+          if (state === "still") {
+            $(this).attr("data-state", "animated");
+            $(this).attr("src", $(this).attr("data-animate"));
+          } else {
+            $(this).attr("data-state", "still");
+            $(this).attr("src", $(this).attr("data-still"));
+          }
+        });
+
+        // Function for displaying gifs data
+        function renderButtons() {
+          $("#buttons-view").empty();
+
+          // Looping through the array of GIFs
+          for (var i = 0; i < GIFs.length; i++) {
+            var a = $("<button>");
+            a.addClass("gif-btn");
+            a.attr("data-name", GIFs[i]);
+            a.text(GIFs[i]);
+            $("#buttons-view").append(a);
+          }
+        }
+
+        // When GIF button pressed
+        $("#add-GIF").on("click", function(event) {
+          event.preventDefault();
+          var gifs = $("#GIF-input")
+            .val()
+            .trim();
+          GIFs.push(gifs);
+          renderButtons();
+        });
+
+        // Adding a click event listener
+        $(document).on("click", ".gif-btn", displayGifInfo);
+
+        // To display the intial buttons
+        renderButtons();
+      </script>
+    </div>
+  </body>
+</html>
+
